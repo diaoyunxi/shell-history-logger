@@ -1,4 +1,4 @@
-# shell-history-logger (PowerShell)
+﻿# shell-history-logger (PowerShell)
 #
 # 将每条交互执行的命令以“追加”方式写入日志文件（默认 $HOME\.history）。
 #
