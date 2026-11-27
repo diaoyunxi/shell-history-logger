@@ -79,7 +79,7 @@ export APPEND_HIST_FILE=~/shell-logs/history.log
 
 | 机制 | bash | zsh | fish | PowerShell |
 |---|---|---|---|---|
-| 钩子方式 | 只向 `PROMPT_COMMAND` **追加**（4.4+ 用数组追加），不覆盖已有内容 | 只向 `preexec_functions` **追加** | 用官方 `fish_add_guard` 注册（自带幂等去重） | 只包装 `prompt` 函数：检测到已有自定义 prompt 时原样保存并调用 |
+| 钩子方式 | 只向 `PROMPT_COMMAND` **追加**（4.4+ 用数组追加），不覆盖已有内容 | 只向 `preexec_functions` **追加** | 用 `--on-event fish_preexec` 注册（同名函数重定义不会重复触发） | 只包装 `prompt` 函数：检测到已有自定义 prompt 时原样保存并调用 |
 | 幂等 | `$__APPEND_HISTORY_BASH_LOADED` 等哨兵变量，重复 `source` 只注册一次 | 同左 + 数组去重 | `set -q` 哨兵 | `$global:__AppendHistoryPs_Registered` |
 | 命名冲突 | 所有符号带 `__append_history_bash_` 前缀 | `__append_history_zsh_` | `__append_history_fish_` | `__AppendHistoryPs_` |
 | 内置历史 | 不动 `HISTFILE`/`HISTSIZE`/`HISTCONTROL`/`HISTTIMEFORMAT` | 不动 | 不动 | 不动 `$PSHistoryOptions`/PSReadLine |

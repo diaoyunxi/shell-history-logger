@@ -4,7 +4,7 @@
 #
 # 特性（尽量不冲突）:
 #   - 不改动 fish 自身 history 机制（~/.local/share/fish/fish_history）
-#   - 用官方 fish_add_guard 注册 on_preexec（自带去重，幂等）
+#   - 用 --on-event fish_preexec 注册（同名函数重定义不会重复触发，幂等）
 #   - 所有符号带 __append_history_fish_ 前缀，避免命名冲突
 #   - 仅用 >> 追加写，从不截断或重写日志；写失败静默
 #
@@ -34,9 +34,9 @@ if not set -q __APPEND_HISTORY_FISH_LOADED
             $ts $argv[1] $argv[2] $argv[3] $argv[4] >> $file 2>/dev/null
     end
 
-    # 每条命令执行前被调用；命令行经 $fish_command（或 $argv）传入
-    function __append_history_fish_preexec --on-preexec
-        set -l cmd "$fish_command"
+    # 每条命令执行前被调用；fish_preexec 事件把完整命令行放在 $argv[1]
+    function __append_history_fish_preexec --on-event fish_preexec
+        set -l cmd "$argv[1]"
         if test -z "$cmd"
             set cmd (string join ' ' -- $argv)
         end
@@ -48,8 +48,8 @@ if not set -q __APPEND_HISTORY_FISH_LOADED
         end
     end
 
-    # 注册（fish_add_guard 幂等，可重复 source）
-    fish_add_guard on_preexec __append_history_fish_preexec
+    # 函数定义即完成事件注册；同名函数重定义不会累积多个处理器，
+    # 配合文件开头的哨兵变量，重复 source 也保持幂等。
 
     # 会话开始标记（可用 APPEND_HIST_SESSION_MARK=0 关闭）
     if test "$APPEND_HIST_SESSION_MARK" != '0'
