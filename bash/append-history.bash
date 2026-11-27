@@ -53,7 +53,9 @@ __append_history_bash_log"          # 旧版：换行分隔追加，不影响既
   fi
 
   # 会话开始标记（仅交互式 shell；可用 APPEND_HIST_SESSION_MARK=0 关闭）
-  if [[ -o interactive && "${APPEND_HIST_SESSION_MARK:-1}" != "0" ]]; then
+  # bash 没有名为 interactive 的 `set -o` 选项，[[ -o interactive ]] 在交互式
+  # shell 中同样为假，会导致该标记永远不写入；改用 $- 判断交互状态。
+  if [[ $- == *i* && "${APPEND_HIST_SESSION_MARK:-1}" != "0" ]]; then
     __append_history_bash_write bash "$$" "$PWD" "session-start"
   fi
 fi

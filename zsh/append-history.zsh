@@ -43,7 +43,10 @@ if [[ -z "${__APPEND_HISTORY_ZSH_LOADED:-}" ]]; then
   }
 
   # 注册进 preexec_functions（只追加，不覆盖；幂等）
-  if [[ "${preexec_functions[(I)__append_history_zsh_preexec]}" == "0" ]]; then
+  # 显式声明为全局数组：未定义时 ${preexec_functions[(I)...]} 展开为空字符串，
+  # 原判断会误以为“已注册”而跳过，导致钩子完全不生效。
+  typeset -ga preexec_functions
+  if (( ${preexec_functions[(I)__append_history_zsh_preexec]} == 0 )); then
     preexec_functions+=(__append_history_zsh_preexec)
   fi
 

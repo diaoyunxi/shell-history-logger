@@ -1,4 +1,4 @@
-﻿# shell-history-logger (PowerShell)
+# shell-history-logger (PowerShell)
 #
 # 将每条交互执行的命令以“追加”方式写入日志文件（默认 $HOME\.history）。
 #
@@ -39,6 +39,7 @@ function __AppendHistoryPs_Write {
 
 if (-not $global:__AppendHistoryPs_Registered) {
     $global:__AppendHistoryPs_Registered = $true
+    $global:__AppendHistoryPs_LastHistoryId = 0
 
     # 保存用户已有的 prompt（函数形式）：用 $function:prompt 捕获其定义文本
     # （5.1 与 7.x 都兼容；$cmd.ScriptBlock 在 5.1 上不可靠）。
@@ -50,10 +51,13 @@ if (-not $global:__AppendHistoryPs_Registered) {
 
     function prompt {
         try {
-            # 提示符在下条输入前显示，此时历史里最后一条即刚执行的命令
+            # 提示符在下条输入前显示，此时历史里最后一条即刚执行的命令。
+            # Get-History 返回 HistoryInfo，命令文本在 CommandLine 属性（不是 Command）；
+            # prompt 会被空回车 / Ctrl+C 等重复调用，用 Id 去重避免同一条命令反复写入。
             $last = Get-History -Count 1 -ErrorAction SilentlyContinue
-            if ($last -and $last.Command) {
-                __AppendHistoryPs_Write 'powershell' $PID $PWD.Path ($last.Command -replace "`n", ' ')
+            if ($last -and $last.CommandLine -and $last.Id -ne $global:__AppendHistoryPs_LastHistoryId) {
+                $global:__AppendHistoryPs_LastHistoryId = $last.Id
+                __AppendHistoryPs_Write 'powershell' $PID $PWD.Path ($last.CommandLine -replace "`n", ' ')
             }
         } catch {}
         # 原样调用用户的自定义 prompt；没有自定义时输出默认样式
